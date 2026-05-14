@@ -7,7 +7,7 @@ import pytest
 from playwright.sync_api import Page
 
 from pages.login_page import LoginPage
-from utils.config import (VALID_EMAIL, VALID_PASSWORD)
+from utils.config import VALID_EMAIL, VALID_PASSWORD
 
 
 @pytest.fixture(scope="function")
