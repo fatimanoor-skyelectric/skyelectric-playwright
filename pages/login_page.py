@@ -80,19 +80,51 @@ class LoginPage:
 
 
     def login_with_google(self, email: str, password: str) -> None:
-        """Handles Google OAuth login flow."""
+        """Handles Google OAuth login flow with manual 2FA approval."""
 
+        # Open Google popup
         with self.page.expect_popup() as popup_info:
             self.google_sign_in.click()
 
         google_page = popup_info.value
 
-        # Google email step
-        google_page.get_by_role("textbox", name="Email or phone").fill(email)
-        google_page.get_by_role("button", name="Next").click()
+        # Wait for popup to load
+        google_page.wait_for_load_state("domcontentloaded")
 
-        # Google password step
-        google_page.get_by_role("textbox", name="Enter your password").fill(password)
-        google_page.get_by_role("button", name="Next").click()
+        # Email step
+        google_page.get_by_role(
+            "textbox",
+            name="Email or phone"
+        ).fill(email)
 
-        google_page.close()
+        google_page.get_by_role(
+            "button",
+            name="Next"
+        ).click()
+
+        # Password step
+        google_page.get_by_role(
+            "textbox",
+            name="Enter your password"
+        ).wait_for(state="visible", timeout=15000)
+
+        google_page.get_by_role(
+            "textbox",
+            name="Enter your password"
+        ).fill(password)
+
+        google_page.get_by_role(
+            "button",
+            name="Next"
+        ).click()
+
+        # -------------------------------
+        # Pause here for mobile approval
+        # -------------------------------
+        input(
+            "\nApprove the Google login from your phone "
+            "then press ENTER to continue..."
+        )
+
+        # Wait until redirected back to app
+        self.page.wait_for_url("**/systems**", timeout=60000)
