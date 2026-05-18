@@ -18,7 +18,7 @@ class LoginPage:
 
         # Links / toggles
         self.forgot_password_link = page.get_by_text("Forgot Password")
-        self.remember_me_checkbox = page.get_by_role("checkbox")
+        self.remember_me_checkbox = page.locator("input[type='checkbox']")
         self.password_eye_toggle = page.locator(".icon.py-4")
 
         # Error container
@@ -44,8 +44,8 @@ class LoginPage:
         self.fill_password(password)
         self.click_sign_in()
 
-    def toggle_remember_me(self) -> None:
-        self.remember_me_checkbox.check()
+    def toggle_remember_me(self):
+        self.remember_me_checkbox.click()
 
     def click_forgot_password(self) -> None:
         self.forgot_password_link.click()

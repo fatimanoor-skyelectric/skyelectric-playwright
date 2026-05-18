@@ -2,83 +2,121 @@
 conftest.py – shared fixtures for SkyElectric Playwright tests
 """
 
+import re
+
 import pytest
-from playwright.sync_api import Page, Browser
+from playwright.sync_api import (
+    sync_playwright,
+    Page,
+    expect,
+)
 
 from pages.login_page import LoginPage
-from utils.config import VALID_EMAIL, VALID_PASSWORD
+from utils.config import (
+    VALID_EMAIL,
+    VALID_PASSWORD,
+)
 
 
 # ======================================================================
-# NORMAL CONTEXT (NO SAVED SESSION)
+# CROSS BROWSER PAGE FIXTURE
 # ======================================================================
 
-@pytest.fixture(scope="function")
-def context(browser: Browser):
-    """
-    Fresh browser context with NO saved authentication.
-    Used for normal login tests.
-    """
+@pytest.fixture(params=["chromium", "firefox", "webkit"])
+def cross_browser_page(request):
 
-    context = browser.new_context()
+    browser_name = request.param
 
-    yield context
+    with sync_playwright() as p:
 
-    context.close()
+        browser_launcher = getattr(p, browser_name)
 
+        browser = browser_launcher.launch(
+            headless=False,
+            slow_mo=100,
+        )
 
-# ======================================================================
-# AUTHENTICATED CONTEXT (USES auth.json)
-# ======================================================================
+        context = browser.new_context(
+            viewport={
+                "width": 1440,
+                "height": 900,
+            }
+        )
 
-@pytest.fixture(scope="function")
-def authenticated_context(browser: Browser):
-    """
-    Browser context using saved Google authentication.
-    """
+        page = context.new_page()
 
-    context = browser.new_context(
-        storage_state="auth.json"
-    )
+        yield page
 
-    yield context
-
-    context.close()
+        context.close()
+        browser.close()
 
 
 # ======================================================================
-# NORMAL PAGE
-# ======================================================================
-
-@pytest.fixture(scope="function")
-def page(context):
-    page = context.new_page()
-
-    yield page
-
-    page.close()
-
-
-# ======================================================================
-# AUTHENTICATED PAGE
+# NORMAL PAGE FIXTURE
 # ======================================================================
 
 @pytest.fixture(scope="function")
-def authenticated_page(authenticated_context):
-    page = authenticated_context.new_page()
+def page():
 
-    page.goto(
-        "https://app.skyelectric.com/systems"
-    )
+    with sync_playwright() as p:
 
-    page.wait_for_url(
-        "**/systems**",
-        timeout=15000
-    )
+        browser = p.chromium.launch(
+            headless=False,
+            slow_mo=300,
+        )
 
-    yield page
+        context = browser.new_context(
+            viewport={
+                "width": 1440,
+                "height": 900,
+            }
+        )
 
-    page.close()
+        page = context.new_page()
+
+        yield page
+
+        context.close()
+        browser.close()
+
+
+# ======================================================================
+# AUTHENTICATED PAGE FIXTURE
+# ======================================================================
+
+@pytest.fixture(scope="function")
+def authenticated_page():
+    """
+    Logs in programmatically on every run — no auth.json required.
+    Uses the same credentials as the rest of the suite.
+    """
+
+    with sync_playwright() as p:
+
+        browser = p.chromium.launch(
+            headless=False,
+            slow_mo=300,
+        )
+
+        context = browser.new_context(
+            viewport={
+                "width": 1440,
+                "height": 900,
+            }
+        )
+
+        page = context.new_page()
+
+        lp = LoginPage(page)
+        lp.navigate()
+        lp.login(VALID_EMAIL, VALID_PASSWORD)
+
+        expect(page).to_have_url(re.compile(r"/systems"), timeout=30000)
+
+        yield page
+
+        context.close()
+        browser.close()
 
 
 # ======================================================================
@@ -87,39 +125,24 @@ def authenticated_page(authenticated_context):
 
 @pytest.fixture(scope="function")
 def login_page(page: Page) -> LoginPage:
-    """
-    Navigate to login page and return LoginPage instance.
-    """
+    """Navigate to login page and return LoginPage instance."""
 
     lp = LoginPage(page)
-
     lp.navigate()
-
     return lp
 
 
 # ======================================================================
-# NORMAL EMAIL/PASSWORD LOGIN
+# LOGGED IN PAGE FIXTURE
 # ======================================================================
 
 @pytest.fixture(scope="function")
 def logged_in_page(page: Page) -> Page:
-    """
-    Logs in using normal email/password authentication.
-    """
-
+    """Logs in using normal email/password authentication."""
     lp = LoginPage(page)
-
     lp.navigate()
+    lp.login(VALID_EMAIL, VALID_PASSWORD)
 
-    lp.login(
-        VALID_EMAIL,
-        VALID_PASSWORD
-    )
-
-    page.wait_for_url(
-        "**/systems**",
-        timeout=15000
-    )
+    expect(page).to_have_url("**/systems**", timeout=30000)
 
     return page
