@@ -3,5 +3,6 @@ screenshots/
 __pycache__/
 venv/
 example
-utils/config.py/
+utils/
 auth.json/
+utils/__pycache__

@@ -11,4 +11,3 @@ WRONG_PASSWORD               = "WrongPass@999"
 BASE_URL = "https://app.skyelectric.com/auth"
 
 VALID_GOOGLE_EMAIL = "fatimanoor@skyelectric.com"
-VALID_GOOGLE_PASSWORD = "Shitwork@9090"
