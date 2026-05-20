@@ -62,7 +62,7 @@ def page():
 
         browser = p.chromium.launch(
             headless=False,
-            slow_mo=300,
+            slow_mo=500,
         )
 
         context = browser.new_context(
@@ -138,11 +138,13 @@ def login_page(page: Page) -> LoginPage:
 
 @pytest.fixture(scope="function")
 def logged_in_page(page: Page) -> Page:
-    """Logs in using normal email/password authentication."""
     lp = LoginPage(page)
     lp.navigate()
     lp.login(VALID_EMAIL, VALID_PASSWORD)
 
-    expect(page).to_have_url("**/systems**", timeout=30000)
+    expect(page).to_have_url(
+        re.compile(r".*/systems.*"),
+        timeout=30000
+    )
 
     return page
