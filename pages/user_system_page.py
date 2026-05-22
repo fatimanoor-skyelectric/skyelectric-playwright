@@ -146,18 +146,25 @@ class UserSystemPage:
         self.search_system(query)
         self.open_system(link_name_pattern)
 
+    
     def enable_pv_stats_graph(self):
 
-        selector_panel = self.page.locator(
-            "[role='dialog'], .dropdown-menu"
+        self.open_statistics_graph_selector()
+
+        self.page.mouse.wheel(0, 1000)
+
+        pv = self.page.get_by_text(
+            re.compile(
+                r"PV Stats",
+                re.IGNORECASE
+            )
         )
 
-        pv = selector_panel.get_by_text(
-            re.compile("PV Stats", re.IGNORECASE)
+        expect(pv.first).to_be_visible(
+            timeout=15000
         )
 
-        expect(pv).to_be_visible(timeout=10000)
-        pv.click()
+        pv.first.click()
     # ------------------------------------------------------------------
     # Details header assertions
     # ------------------------------------------------------------------
@@ -340,39 +347,60 @@ class UserSystemPage:
         grid.click()
 
 
+    
     def click_solar_section(self):
 
-        solar = self.page.locator(
-            "button,span,div"
-        ).filter(
-            has_text=re.compile("^Solar$", re.IGNORECASE)
-        ).first
+        # Move down to home cards area
+        self.page.mouse.wheel(0, 1500)
+        self.page.wait_for_timeout(1000)
 
-        expect(solar).to_be_visible(timeout=10000)
+        solar = self.page.get_by_text(
+            re.compile(r"Generation", re.IGNORECASE)
+        )
+
+        expect(solar).to_be_visible(timeout=15000)
+
+        solar.scroll_into_view_if_needed()
         solar.click()
 
     def click_battery_section(self):
 
-        battery = self.page.locator(
-            "button,span,div"
-        ).filter(
-            has_text=re.compile("^Battery$", re.IGNORECASE)
+        self.page.mouse.wheel(0, 1200)
+
+        battery = self.page.get_by_text(
+            re.compile(r"\bBattery\b", re.IGNORECASE)
         ).first
 
-        expect(battery).to_be_visible(timeout=10000)
+        expect(battery).to_be_visible(timeout=15000)
+
+        battery.scroll_into_view_if_needed()
         battery.click()
 
 
+
+    
     def assert_solar_visible(self):
-        expect(
-            self.page.locator("body")
-        ).to_contain_text("Solar")
+
+        generation = self.page.get_by_text(
+            re.compile(
+                r"solar panels are generating",
+                re.IGNORECASE
+            )
+        )
+
+        expect(generation).to_be_visible(timeout=15000)
 
 
     def assert_battery_visible(self):
-        expect(
-            self.page.locator("body")
-        ).to_contain_text("Battery")
+
+        storage = self.page.get_by_text(
+            re.compile(
+                r"battery is charging",
+                re.IGNORECASE
+            )
+        )
+
+        expect(storage).to_be_visible(timeout=15000)
 
 
     def open_grid_details_popup(self) -> None:
@@ -388,37 +416,53 @@ class UserSystemPage:
     def open_battery_details_popup(self) -> None:
         self.page.locator("battery-container").get_by_role("button").click()
 
+    # =========================
+# Carousel fixes
+# =========================
+
     def navigate_home_carousel_forward(self, steps=1):
 
-    # Scroll until carousel controls appear
-        self.page.mouse.wheel(0, 2000)
-        self.page.wait_for_timeout(1000)
+        # Scroll repeatedly until controls appear
+        for _ in range(5):
 
-        next_btn = self.page.get_by_role(
-            "button",
-            name=">"
-        )
-        expect(next_btn).to_be_visible(timeout=10000)
+            self.page.mouse.wheel(0, 700)
+            self.page.wait_for_timeout(500)
+
+            next_btn = self.page.get_by_role(
+                "button",
+                name=">"
+            )
+
+            if next_btn.count() > 0:
+                break
+
+        expect(next_btn.first).to_be_visible(timeout=15000)
+
         for _ in range(steps):
-            next_btn.click()
-            self.page.wait_for_timeout(300)
+            next_btn.first.click()
+            self.page.wait_for_timeout(500)
+
 
     def navigate_home_carousel_back(self, steps=1):
 
-        # Scroll until carousel controls appear
-        self.page.mouse.wheel(0, 2000)
-        self.page.wait_for_timeout(1000)
+        for _ in range(5):
 
-        prev_btn = self.page.get_by_role(
-            "button",
-            name="<"
-        )
+            self.page.mouse.wheel(0, 700)
+            self.page.wait_for_timeout(500)
 
-        expect(prev_btn).to_be_visible(timeout=10000)
+            prev_btn = self.page.get_by_role(
+                "button",
+                name="<"
+            )
+
+            if prev_btn.count() > 0:
+                break
+
+        expect(prev_btn.first).to_be_visible(timeout=15000)
 
         for _ in range(steps):
-            prev_btn.click()
-            self.page.wait_for_timeout(300)
+            prev_btn.first.click()
+            self.page.wait_for_timeout(500)
 
     # ------------------------------------------------------------------
     # Statistics tab
@@ -469,14 +513,19 @@ class UserSystemPage:
     #     expect(option).to_be_visible(timeout=10000)
 
     #     option.click()
+    
     def filter_statistics_all_graphs(self):
 
-        option = self.page.locator(
-            "label",
-            has_text=re.compile("All Graphs", re.IGNORECASE)
-        )
+        # Open selector first if needed
+        self.open_statistics_graph_selector()
 
-        expect(option).to_be_visible(timeout=10000)
+        option = self.page.get_by_text(
+            re.compile(r"All Graphs", re.IGNORECASE)
+        ).last
+
+        expect(option).to_be_visible(timeout=15000)
+
+        option.scroll_into_view_if_needed()
         option.click()
 
     def set_statistics_view_daily(self) -> None:
@@ -518,13 +567,31 @@ class UserSystemPage:
 
     def reset_alerts_to_default(self):
 
+        for _ in range(4):
+
+            self.page.mouse.wheel(
+                0,
+                500
+            )
+
+            self.page.wait_for_timeout(
+                500
+            )
+
         reset_btn = self.page.get_by_text(
-            re.compile("RESET", re.IGNORECASE)
+            re.compile(
+                r"RESET",
+                re.IGNORECASE
+            )
         )
 
-        expect(reset_btn).to_be_visible(timeout=10000)
+        expect(
+            reset_btn.first
+        ).to_be_visible(
+            timeout=15000
+        )
 
-        reset_btn.click()
+        reset_btn.first.click()
 
     def apply_all_alert_filters_in_sequence(self) -> None:
         """Cycle through every built-in time-filter button."""
