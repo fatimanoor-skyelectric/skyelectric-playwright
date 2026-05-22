@@ -398,13 +398,10 @@ class UserSystemPage:
             "button",
             name=">"
         )
-
         expect(next_btn).to_be_visible(timeout=10000)
-
         for _ in range(steps):
             next_btn.click()
-            self.page.wait_for_timeout(300)`
-
+            self.page.wait_for_timeout(300)
 
     def navigate_home_carousel_back(self, steps=1):
 
