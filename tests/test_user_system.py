@@ -55,7 +55,7 @@ class TestSystemSearch:
         link = sp.page.get_by_role(
             "link", name=re.compile("Karachi SkyElectric", re.IGNORECASE)
         )
-        expect(link).to_be_visible()
+        expect(link.first).to_be_visible()
 
     def test_open_system_lands_on_detail_page(self, sp: UserSystemPage) -> None:
         """Opening the found system link navigates to the system detail URL."""

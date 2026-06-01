@@ -1,112 +1,153 @@
 import pytest
-
-from pages.user_system_page import (
-    SystemDetailsPage
-)
-
-
-SEARCH_QUERY="skyelectric"
-
-SYSTEM_LINK="Karachi SkyElectric .. - AIO"
+from playwright.sync_api import expect
+from pages.system_page import SystemsPage
 
 
 @pytest.fixture()
-def system_page(
-    authenticated_page
-):
-
-    page=SystemDetailsPage(
-        authenticated_page
-    )
-
-    page.search_and_open(
-        SEARCH_QUERY,
-        SYSTEM_LINK
-    )
-
-    # reset language every test
-
-    try:
-
-        page.switch_language(
-            "en"
-        )
-
-    except:
-
-        pass
-
+def systems_page(authenticated_page):
+    page = SystemsPage(authenticated_page)
+    page.navigate()
     return page
 
 
-class TestSmartFlowToggle:
+class TestSystemsFilters:
 
-    def test_toggle_smart_flow_on_and_off(
+    def test_last_hour_filter(
         self,
-        system_page
+        systems_page
     ):
+        systems_page.select_last_hour()
 
-        system_page.toggle_smart_flow()
-
-        system_page.toggle_smart_flow()
-
-
-class TestStatisticsTab:
-
-    def test_statistics_tab_opens(
+    def test_system_capacity_filter(
         self,
-        system_page
+        systems_page
     ):
+        systems_page.select_system_capacity()
+        systems_page.verify_system_capacity_filter()
 
-        system_page.go_to_statistics()
-
-
-class TestLanguageSwitching:
-
-    def test_switch_to_japanese_header(
+    def test_power_company_filter(
         self,
-        system_page
+        systems_page
     ):
+        systems_page.select_power_company()
+        systems_page.verify_power_company_filter()
 
-        system_page.switch_language(
-            "ja"
-        )
+    def test_battery_capacity_filter(
+        self,
+        systems_page
+    ):
+        systems_page.select_battery_capacity()
+        systems_page.verify_battery_capacity_filter()
+
+
+class TestDateFilters:
+
+    def test_reset_date_filter(
+        self,
+        systems_page
+    ):
+        systems_page.reset_date_filter()
+
+    def test_custom_date_range(
+        self,
+        systems_page
+    ):
+        systems_page.apply_custom_date_range()
+        systems_page.verify_no_results()
+
+
+class TestLanguage:
+
+    def test_change_language_to_japanese(
+        self,
+        systems_page
+    ):
+        systems_page.change_language_to_japanese()
+        systems_page.verify_japanese_language()
+
+    def test_change_language_back_to_english(
+        self,
+        systems_page
+    ):
+        systems_page.change_language_to_japanese()
+        systems_page.change_language_to_english()
+
+
+class TestNavigation:
+
+    def test_dashboard_navigation(
+        self,
+        systems_page
+    ):
+        systems_page.open_dashboard()
 
         expect(
-            system_page.details_header
-        ).to_contain_text(
-            "スマート"
-        )
-
-
-class TestHomeDashboard:
-
-    def test_first_swipe_shows_solar_distribution(
-        self,
-        system_page
-    ):
-
-        system_page.go_to_home()
-
-        system_page.battery_button.click()
-
-        expect(
-            system_page.next_button
+            systems_page.page.get_by_role(
+                "heading",
+                name="Dashboard"
+            )
         ).to_be_visible()
 
-        system_page.next_button.click()
-
-
-    def test_battery_cabinet_clickable(
+    def test_alerts_navigation(
         self,
-        system_page
+        systems_page
     ):
-
-        system_page.go_to_home()
+        systems_page.open_alerts()
 
         expect(
-            system_page.battery_cabinet_img
+            systems_page.page.get_by_text(
+                "Alert Details"
+            )
         ).to_be_visible()
 
-        system_page.battery_cabinet_img.click()
-        
+    def test_releases_navigation(
+        self,
+        systems_page
+    ):
+        systems_page.open_releases()
+
+        expect(
+            systems_page.page.get_by_role(
+                "button",
+                name="+Create Release"
+            )
+        ).to_be_visible()
+
+    def test_warehouse_navigation(
+        self,
+        systems_page
+    ):
+        systems_page.open_warehouse()
+
+        expect(
+            systems_page.page.locator(
+                '[id="1"]'
+            ).get_by_text("Warehouse")
+        ).to_be_visible()
+
+    def test_ft_navigation(
+        self,
+        systems_page
+    ):
+        systems_page.open_ft()
+
+        expect(
+            systems_page.page.get_by_text(
+                "BMS FT"
+            ).first
+        ).to_be_visible()
+
+    def test_systems_navigation(
+        self,
+        systems_page
+    ):
+        systems_page.open_systems()
+
+        expect(
+            systems_page.page.locator(
+                '[id="1"]'
+            ).get_by_text(
+                "Systems",
+                exact=True
+            )
+        ).to_be_visible()

@@ -1,253 +1,262 @@
 from playwright.sync_api import Page, expect
 
 
-class SystemPage:
-
+class SystemsPage:
     URL = "https://app.skyelectric.com/systems"
 
     def __init__(self, page: Page):
-
         self.page = page
 
-        # Cards
-        self.system_cards = page.locator(
-            "app-systems-card"
-        )
-
-        # Search
-        self.search_box = page.get_by_role(
-            "textbox",
-            name="Search"
-        )
-
-        # Filter dropdown
-        self.filter_dropdown = page.locator(
-            "#test3"
-        )
-
-        self.customer_details = page.locator(
-            "a"
-        ).filter(
-            has_text="Customer Details"
-        )
-
-        self.customer_contact = page.locator(
-            "a"
-        ).filter(
-            has_text="Customer Contact"
-        ).last
-
-        # Language controls
-        # Use stable selector instead of label text
-        self.language_dropdown = page.locator(
-            "select"
-        )
-
-        self.system_header = page.locator(
-            "app-systems-header"
-        )
-
-    # ===================================
+    # --------------------------------------------------
     # Navigation
-    # ===================================
+    # --------------------------------------------------
 
     def navigate(self):
-
         self.page.goto(self.URL)
+        self.page.wait_for_load_state("networkidle")
 
-        self.page.wait_for_load_state(
-            "networkidle"
-        )
+    # --------------------------------------------------
+    # Time Filters
+    # --------------------------------------------------
 
-    # ===================================
-    # Card validation
-    # ===================================
+    def select_last_hour(self):
+        self.page.get_by_role(
+            "button",
+            name="Last 24 Hours"
+        ).click()
 
-    def verify_system_cards_visible(self):
+        self.page.get_by_role(
+            "button",
+            name="Last Hour"
+        ).click()
 
-        expect(
-            self.system_cards.first
-        ).to_be_visible()
+    def select_last_24_hours(self):
+        self.page.get_by_role(
+            "button",
+            name="Last 24 Hours"
+        ).click()
 
-        expect(
-            self.system_cards.nth(1)
-        ).to_be_visible()
+    # --------------------------------------------------
+    # Category Filter
+    # --------------------------------------------------
 
-        expect(
-            self.system_cards.nth(2)
-        ).to_be_visible()
+    def open_category_dropdown(self):
+        self.page.locator(
+            ".whitespace-no-wrap.flex.items-center.justify-between"
+        ).first.click()
 
-    # ===================================
-    # Search
-    # ===================================
+    def select_category(self, category_name: str):
+        self.open_category_dropdown()
 
-    def search_system(self, value):
-
-        self.search_box.clear()
-
-        self.search_box.fill(value)
-
-        self.search_box.press("Enter")
-
-    def verify_search_value(self, value):
-
-        expect(
-            self.search_box
-        ).to_have_value(
-            value
-        )
-
-    def verify_search_result(self, text):
-
-        expect(
-            self.page.locator(
-                "app-systems-new"
-            )
-        ).to_contain_text(
-            text
-        )
-
-    # ===================================
-    # Search criteria
-    # ===================================
-
-    def select_search_criteria(
-        self,
-        criteria
-    ):
-
-        self.filter_dropdown.click()
-
-        if criteria == "Customer Contact":
-
-            self.customer_details.click()
-
-            expect(
-                self.customer_contact
-            ).to_be_visible()
-
-            self.customer_contact.click()
-
-        else:
-
-            option = self.page.locator(
-                "a"
-            ).filter(
-                has_text=criteria
-            ).first
-
-            expect(
-                option
-            ).to_be_visible()
-
-            option.click()
-
-    def select_customer_contact(self):
-
-        self.filter_dropdown.click()
-
-        self.customer_details.click()
-
-        expect(
-            self.customer_contact
-        ).to_be_visible()
-
-        self.customer_contact.click()
-
-    def verify_customer_contact_selected(self):
-
-        expect(
-            self.filter_dropdown
-        ).to_contain_text(
-            "Customer Contact"
-        )
-
-    # ===================================
-    # System details
-    # ===================================
-
-    def open_system(
-        self,
-        system_name
-    ):
-
-        system = self.page.get_by_role(
-            "link"
+        self.page.locator(
+            "a"
         ).filter(
-            has_text=system_name
-        ).first
+            has_text=category_name
+        ).click()
 
+    # --------------------------------------------------
+    # System Capacity
+    # --------------------------------------------------
+
+    def select_system_capacity(self):
+        self.select_category("System Capacity")
+
+    def verify_system_capacity_filter(self):
         expect(
-            system
-        ).to_be_visible()
-
-        system.click()
-
-    def verify_system_name(
-        self,
-        name
-    ):
-
-        expect(
-            self.page.get_by_role(
-                "textbox"
-            )
-        ).to_have_value(
-            name
+            self.page.locator("drag-scroll")
+        ).to_contain_text(
+            "10 kW (3563)"
         )
 
-    # ===================================
-    # Users tab
-    # ===================================
+        expect(
+            self.page.locator("drag-scroll")
+        ).to_match_aria_snapshot(
+            "- text: /5\\.5 kW \\(\\d+\\)/"
+        )
 
-    def open_users_tab(self):
+    # --------------------------------------------------
+    # Power Company
+    # --------------------------------------------------
 
-        self.page.get_by_text(
-            "Users",
+    def select_power_company(self):
+        self.select_category("Power Company")
+
+    def verify_power_company_filter(self):
+        expect(
+            self.page.locator("drag-scroll")
+        ).to_match_aria_snapshot(
+            "- text: /IESCO \\(\\d+\\)/"
+        )
+
+        expect(
+            self.page.get_by_text("LESCO (1280)")
+        ).to_be_visible()
+
+        expect(
+            self.page.get_by_text("KESC (1047)")
+        ).to_be_visible()
+
+    # --------------------------------------------------
+    # Battery Capacity
+    # --------------------------------------------------
+
+    def select_battery_capacity(self):
+        self.select_category("Battery Capacity")
+
+    def verify_battery_capacity_filter(self):
+        expect(
+            self.page.get_by_text("kWh (2347)")
+        ).to_be_visible()
+
+        expect(
+            self.page.get_by_text("kWh (1046)")
+        ).to_be_visible()
+
+        expect(
+            self.page.locator("drag-scroll")
+        ).to_match_aria_snapshot(
+            "- text: /\\d+ kWh \\(\\d+\\)/"
+        )
+
+        expect(
+            self.page.locator("drag-scroll")
+        ).to_contain_text(
+            "5 kWh (574)"
+        )
+
+    # --------------------------------------------------
+    # Date Filter
+    # --------------------------------------------------
+
+    def open_calendar(self):
+        self.page.locator(
+            ".icon.pointer.calendar-button"
+        ).click()
+
+    def reset_date_filter(self):
+        self.open_calendar()
+
+        self.page.get_by_role(
+            "button",
+            name="Set to Default"
+        ).click()
+
+    def apply_custom_date_range(self):
+        self.open_calendar()
+
+        self.page.locator(
+            "#owl-dt-picker-2"
+        ).get_by_text("13").click()
+
+        self.page.locator(
+            "#owl-dt-picker-3"
+        ).get_by_text("23").click()
+
+        self.page.get_by_role(
+            "button",
+            name="Set",
             exact=True
         ).click()
 
-    def verify_users_tab_loaded(self):
-
+    def verify_no_results(self):
         expect(
-            self.page.locator(
-                "app-latest-updates"
-            )
-        ).to_be_visible()
-
-    # ===================================
-    # Language switch
-    # ===================================
-
-    def switch_language(
-        self,
-        language_code
-    ):
-
-        expect(
-            self.language_dropdown
-        ).to_be_visible()
-
-        self.language_dropdown.select_option(
-            language_code
+            self.page.locator("app-systems-new")
+        ).to_contain_text(
+            "We couldn't find what you are looking for"
         )
 
-        self.page.wait_for_load_state(
-            "networkidle"
+        expect(
+            self.page.locator("b")
+        ).to_contain_text(
+            "No results found."
         )
+
+    # --------------------------------------------------
+    # Language
+    # --------------------------------------------------
+
+    def change_language_to_japanese(self):
+        self.page.get_by_label(
+            "Select language : English"
+        ).select_option("ja")
 
     def verify_japanese_language(self):
-
         expect(
-            self.system_header
-        ).to_contain_text(
-            "システムズ"
-        )
+            self.page.locator("app-systems-header")
+        ).to_contain_text("システムズ")
 
-    def verify_english_language(self):
+    def change_language_to_english(self):
+        self.page.get_by_label(
+            "言語の選択 : Japanese English"
+        ).select_option("en")
 
-        expect(
-            self.system_header
-        ).to_contain_text(
-            "Systems"
-        )
+    # --------------------------------------------------
+    # Top Navigation
+    # --------------------------------------------------
+
+    def open_pm_dashboard(self):
+        self.page.get_by_role(
+            "link",
+            name="PM Dashboard"
+        ).click()
+
+    def open_dashboard(self):
+        self.page.get_by_role(
+            "link",
+            name="Dashboard",
+            exact=True
+        ).click()
+
+    def open_alerts(self):
+        self.page.get_by_role(
+            "link",
+            name="Alerts"
+        ).click()
+
+    def open_releases(self):
+        self.page.get_by_role(
+            "link",
+            name="Releases"
+        ).click()
+
+    def open_configurations(self):
+        self.page.get_by_role(
+            "link",
+            name="Configurations"
+        ).click()
+
+    def open_crash_reports(self):
+        self.page.get_by_role(
+            "link",
+            name="Crash Reports"
+        ).click()
+
+    def open_devices(self):
+        self.page.get_by_role(
+            "link",
+            name="Devices"
+        ).click()
+
+    def open_users(self):
+        self.page.get_by_role(
+            "link",
+            name="Users"
+        ).click()
+
+    def open_warehouse(self):
+        self.page.get_by_role(
+            "link",
+            name="Warehouse"
+        ).click()
+
+    def open_ft(self):
+        self.page.get_by_role(
+            "link",
+            name="FT"
+        ).click()
+
+    def open_systems(self):
+        self.page.get_by_role(
+            "link",
+            name="Systems"
+        ).click()

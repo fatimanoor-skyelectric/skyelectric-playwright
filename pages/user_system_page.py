@@ -151,20 +151,15 @@ class UserSystemPage:
 
         self.open_statistics_graph_selector()
 
-        self.page.mouse.wheel(0, 1000)
-
         pv = self.page.get_by_text(
-            re.compile(
-                r"PV Stats",
-                re.IGNORECASE
-            )
-        )
+            re.compile(r"PV Stats", re.IGNORECASE)
+        ).first
 
-        expect(pv.first).to_be_visible(
-            timeout=15000
-        )
+        pv.scroll_into_view_if_needed()
 
-        pv.first.click()
+        expect(pv).to_be_visible(timeout=15000)
+
+        pv.click()
     # ------------------------------------------------------------------
     # Details header assertions
     # ------------------------------------------------------------------
