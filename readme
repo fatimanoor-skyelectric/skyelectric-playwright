@@ -1,0 +1,194 @@
+# Playwright Automation Framework
+
+## Overview
+
+This repository contains the UI automation framework built using **Python**, **Pytest**, and **Playwright** following the **Page Object Model (POM)** design pattern.
+
+---
+
+## Prerequisites
+
+Before running the tests, ensure the following are installed on your machine:
+
+### 1. Python
+
+Verify Python is installed:
+
+```bash
+python --version
+```
+
+### 2. Playwright
+
+Install Playwright:
+
+```bash
+pip install playwright
+playwright install
+```
+
+### 3. Project Code
+
+Clone the repository:
+
+```bash
+git clone <repository-url>
+cd <repository-name>
+```
+
+---
+
+## Virtual Environment Setup
+
+It is strongly recommended to run the framework inside a virtual environment.
+
+### Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+### Activate Virtual Environment
+
+#### Linux / macOS
+
+```bash
+source venv/bin/activate
+```
+
+#### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+---
+
+## Install Dependencies
+
+Install all required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Record New Scripts Using Playwright Codegen
+
+Playwright provides a code generation utility for recording user actions.
+
+```bash
+playwright codegen https://app.skyelectric.com/auth
+```
+
+---
+
+## Running Tests
+
+### Run All Login Tests
+
+```bash
+pytest tests/test_login.py -v
+```
+
+### Run a Specific Login Test
+
+```bash
+pytest tests/test_login.py::TestLoginNegative::test_TC_LOGIN_04_unregistered_email_shows_error -v
+```
+
+### Run Tests in Headed Mode
+
+Launch the browser and watch the execution:
+
+```bash
+pytest tests/test_login.py -v --headed
+```
+
+### Run Tests in Slow Motion Mode
+
+Useful for debugging and observing each step:
+
+```bash
+pytest tests/test_login.py -v --headed --slowmo=500
+```
+
+---
+
+## Running a Specific Test Function
+
+Example:
+
+```bash
+pytest tests/test_system.py::TestDateFilters::test_custom_date_range -s
+```
+
+---
+
+## Pytest Command Options
+
+| Option         | Description                                      |
+| -------------- | ------------------------------------------------ |
+| `-v`           | Verbose output                                   |
+| `-s`           | Display print statements in console              |
+| `--headed`     | Run browser in visible mode                      |
+| `--slowmo=500` | Add delay between browser actions (milliseconds) |
+
+---
+
+## Framework Structure
+
+```text
+project/
+│
+├── pages/             # Page Object Model classes
+├── tests/             # Test cases
+├── utils/             # Utility/helper functions
+├── config/            # Environment/configuration files
+├── conftest.py        # Pytest fixtures
+├── requirements.txt   # Python dependencies
+└── README.md          # Project documentation
+```
+
+---
+
+## Best Practices
+
+* Always activate the virtual environment before running tests.
+* Pull the latest code before execution.
+* Keep credentials and environment-specific data outside the source code.
+* Follow the Page Object Model pattern when adding new test cases.
+* Use specific test execution commands during debugging to reduce execution time.
+
+---
+
+## Troubleshooting
+
+### Browser Not Installed
+
+Run:
+
+```bash
+playwright install
+```
+
+### Missing Python Packages
+
+Run:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Verify Playwright Installation
+
+```bash
+playwright --version
+```
+
+---
+
+## Support
+
+For framework-related issues, contact the automation framework maintainer or create an issue in the repository.
