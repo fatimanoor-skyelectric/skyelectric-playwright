@@ -1,0 +1,8 @@
+playwright>=1.53.0
+pytest>=8.3.0
+pytest-playwright>=0.7.0
+pytest-html>=4.1.1
+python-dotenv>=1.0.1
+requests>=2.32.0
+allure-pytest>=2.14.0
+faker>=37.0.0

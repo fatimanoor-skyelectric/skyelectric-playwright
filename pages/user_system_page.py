@@ -16,6 +16,8 @@ Covers every major section surfaced in the Playwright codegen recording:
 import re
 from playwright.sync_api import Page, expect, Locator
 
+from pages.statistics_dashboard_page import StatisticsDashboardPage
+
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -54,6 +56,9 @@ class UserSystemPage:
     page_obj.search_and_open_system("skyelectric", "Karachi SkyElectric")
     page_obj.navigate_to_tab("Statistics")
     """
+    from pages.statistics_dashboard_page import (
+        StatisticsDashboardPage
+    )
 
     # ------------------------------------------------------------------
     # Construction
@@ -99,6 +104,27 @@ class UserSystemPage:
         self.page.wait_for_load_state(
     "networkidle"
 )
+
+    def assert_all_header_elements(self) -> None:
+        expected = [
+            "Type",
+            "Customer Name",
+            "Location",
+            "Registration:",
+            "View Dashboard",
+            "PM Date",
+            "Installation Date",
+            "Warranty Expiration",
+            "Premium Services Expiry",
+            "Backup",
+            "Apply Configurations",
+            "System Summary",
+            "Smart Flow",
+            "Outage Predictions",
+        ]
+
+        for item in expected:
+            expect(self._details_header).to_contain_text(item)
 
     def navigate_to_alerts(
         self,
@@ -459,6 +485,34 @@ class UserSystemPage:
             prev_btn.first.click()
             self.page.wait_for_timeout(500)
 
+
+
+#-------------------------------------------------------------
+# Dashboard open 
+#-------------------------------------------------------------
+
+    def open_dashboard(self):
+
+        expect(
+            self.page.get_by_text(
+                "View Dashboard"
+            )
+        ).to_be_visible()
+
+        with self.page.expect_popup() as popup:
+
+            self.page.get_by_text(
+                "Dashboard",
+                exact=True
+            ).click()
+
+        dashboard_page = popup.value
+
+        dashboard_page.wait_for_load_state()
+
+        return StatisticsDashboardPage(
+            dashboard_page
+        )   
     # ------------------------------------------------------------------
     # Statistics tab
     # ------------------------------------------------------------------
